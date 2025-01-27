@@ -1,10 +1,35 @@
 import socket
 import threading
 import sys
+import pygame
 
 HOST = '192.168.1.12'  # match the server's HOST
 PORT = 5001         # match the server's PORT
 NAME = None
+pygame.init()
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 400
+STARTING_POSITION = (100, 290)
+FORWARD = True
+
+clock = pygame.time.Clock()
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Random Game")
+font = pygame.font.Font(None, 36)
+background = pygame.image.load('images/Background.jpeg').convert()
+
+players={}
+
+def Spawn(name):
+    player_image = pygame.image.load("images/player.png").convert()
+    player_rect = player_image.get_rect()
+    text = font.render(name, True, (255, 255, 255))
+    text_rect = text.get_rect()
+
+    players[name] = (player_image, player_rect, text, text_rect)
+    for name, (player_image, player_rect, text, text_rect) in players.items():
+        player_rect.center = STARTING_POSITION
+        text_rect.center = (player_rect.centerx, player_rect.top - 10)
 def receive_messages(client_socket):
     """
     Continuously listen for messages from the server and print them.
@@ -16,7 +41,7 @@ def receive_messages(client_socket):
                 # Server closed connection
                 print("[!] Server closed connection.")
                 break
-            direction , name= data.decode('utf-8').split(",")
+            direction , name = data.decode('utf-8').split(",")
 
             if direction == "left":
                 #other user went left , update him
@@ -26,7 +51,7 @@ def receive_messages(client_socket):
                 pass
             else :
                 #spawn the new player
-                pass
+                Spawn(name)
 
 
         except ConnectionResetError:
@@ -55,6 +80,7 @@ except Exception as e:
 # Start a thread to listen for incoming messages
 data = client_socket.recv(1024)
 NAME= int(data.decode("uft-8"))
+Spawn(NAME)
 receiver_thread = threading.Thread(target=receive_messages, args=(client_socket,), daemon=True)
 receiver_thread.start()
 
@@ -63,3 +89,35 @@ def goLeft():
 def goRight():
     client_socket.send(f"right,{NAME}")
 
+running = True
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        goLeft()
+        if FORWARD:
+            players[NAME][0] = pygame.transform.flip(players[NAME][0], True, False)
+            FORWARD = False
+        players[NAME][1].x -= 5
+        players[NAME][3].x -= 5
+    if keys[pygame.K_RIGHT]:
+        goRight()
+        if not FORWARD:
+            players[NAME][0] = pygame.transform.flip(players[NAME][0], True, False)
+            FORWARD = True
+        players[NAME][1].x += 5
+        players[NAME][3].x += 5
+
+    screen.blit(background, (0, 0))
+    for name, (player_image, player_rect, text, text_rect) in players.items():
+        screen.blit(player_image, player_rect)
+        screen.blit(text, text_rect)
+
+    pygame.display.update()
+    clock.tick(60)
+
+pygame.quit()
