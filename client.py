@@ -10,7 +10,6 @@ pygame.init()
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 400
 STARTING_POSITION = (100, 290)
-FORWARD = True
 
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -26,7 +25,7 @@ def Spawn(name):
     text = font.render(name, True, (255, 255, 255))
     text_rect = text.get_rect()
 
-    players[name] = (player_image, player_rect, text, text_rect)
+    players[name] = (player_image, player_rect, text, text_rect ,True)
     for name, (player_image, player_rect, text, text_rect) in players.items():
         player_rect.center = STARTING_POSITION
         text_rect.center = (player_rect.centerx, player_rect.top - 10)
@@ -45,10 +44,18 @@ def receive_messages(client_socket):
 
             if direction == "left":
                 #other user went left , update him
-                pass
+                if players[name][4]:
+                    players[name][0] = pygame.transform.flip(players[name][0], True, False)
+                    players[name][4] = not players[name][4]
+                players[name][1].x -= 5
+                players[name][3].x -= 5
             elif direction=="right":
                 #otherplayer went right , update him
-                pass
+                if not players[NAME][4]:
+                    players[name][0] = pygame.transform.flip(players[name][0], True, False)
+                    players[name][4] = not players[name][4]
+                players[name][1].x += 5
+                players[name][3].x += 5
             else :
                 #spawn the new player
                 Spawn(name)
@@ -99,16 +106,16 @@ while running:
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         goLeft()
-        if FORWARD:
+        if players[NAME][4]:
             players[NAME][0] = pygame.transform.flip(players[NAME][0], True, False)
-            FORWARD = False
+            players[NAME][4] = not players[NAME][4]
         players[NAME][1].x -= 5
         players[NAME][3].x -= 5
     if keys[pygame.K_RIGHT]:
         goRight()
-        if not FORWARD:
+        if not players[NAME][4]:
             players[NAME][0] = pygame.transform.flip(players[NAME][0], True, False)
-            FORWARD = True
+            players[NAME][4] = not players[NAME][4]
         players[NAME][1].x += 5
         players[NAME][3].x += 5
 
