@@ -3,7 +3,7 @@ import threading
 import sys
 import pygame
 
-HOST = '192.168.1.12'  # match the server's HOST
+HOST = '192.168.1.14'  # match the server's HOST
 PORT = 5001         # match the server's PORT
 NAME = None
 pygame.init()
@@ -40,25 +40,27 @@ def receive_messages(client_socket):
                 # Server closed connection
                 print("[!] Server closed connection.")
                 break
-            direction , name = data.decode('utf-8').split(",")
+            intructions = data.decode('utf-8').split(";")
+            for instruction in intructions:
+                direction , name = instruction.split(",")
 
-            if direction == "left":
-                #other user went left , update him
-                if players[name][4]:
-                    players[name][0] = pygame.transform.flip(players[name][0], True, False)
-                    players[name][4] = not players[name][4]
-                players[name][1].x -= 5
-                players[name][3].x -= 5
-            elif direction=="right":
-                #otherplayer went right , update him
-                if not players[NAME][4]:
-                    players[name][0] = pygame.transform.flip(players[name][0], True, False)
-                    players[name][4] = not players[name][4]
-                players[name][1].x += 5
-                players[name][3].x += 5
-            else :
-                #spawn the new player
-                Spawn(name)
+                if direction == "left":
+                    #other user went left , update him
+                    if players[name][4]:
+                        players[name][0] = pygame.transform.flip(players[name][0], True, False)
+                        players[name][4] = not players[name][4]
+                    players[name][1].x -= 5
+                    players[name][3].x -= 5
+                elif direction=="right":
+                    #otherplayer went right , update him
+                    if not players[NAME][4]:
+                        players[name][0] = pygame.transform.flip(players[name][0], True, False)
+                        players[name][4] = not players[name][4]
+                    players[name][1].x += 5
+                    players[name][3].x += 5
+                else :
+                    #spawn the new player
+                    Spawn(name)
 
 
         except ConnectionResetError:
@@ -92,9 +94,9 @@ receiver_thread = threading.Thread(target=receive_messages, args=(client_socket,
 receiver_thread.start()
 
 def goLeft():
-    client_socket.send(f"left,{str(NAME)}".encode("utf-8"))
+    client_socket.send(f"left,{str(NAME)};".encode("utf-8"))
 def goRight():
-    client_socket.send(f"right,{str(NAME)}".encode("utf-8"))
+    client_socket.send(f"right,{str(NAME)};".encode("utf-8"))
 
 running = True
 
