@@ -36,12 +36,18 @@ def receive_messages(client_socket):
     while True:
         try:
             data = client_socket.recv(1024)
+            print(data.decode('utf-8'))
             if not data:
                 # Server closed connection
                 print("[!] Server closed connection.")
                 break
+            if len(data.decode('utf-8'))==1:
+                Spawn(data.decode('utf-8'))
+                continue
             intructions = data.decode('utf-8').split(";")
             for instruction in intructions:
+                if instruction == "":
+                    continue
                 direction , name = instruction.split(",")
 
                 if direction == "left":
@@ -58,9 +64,7 @@ def receive_messages(client_socket):
                         players[name][4] = not players[name][4]
                     players[name][1].x += 5
                     players[name][3].x += 5
-                else :
-                    #spawn the new player
-                    Spawn(name)
+
 
 
         except ConnectionResetError:
