@@ -67,8 +67,8 @@ def main():
         while True:
             client_socket, addr = server_socket.accept()
             client_sockets.append(client_socket)
-            data=str(len(client_socket)).encode("utf-8")
-            client_socket.send(data)
+            data=str(len(client_sockets)).encode("utf-8")
+
             broadcast(data)
             # Start a new thread to handle each client connection
             client_thread = threading.Thread(target=handle_client, args=(client_socket, addr), daemon=True)

@@ -25,8 +25,8 @@ def Spawn(name):
     text = font.render(name, True, (255, 255, 255))
     text_rect = text.get_rect()
 
-    players[name] = (player_image, player_rect, text, text_rect ,True)
-    for name, (player_image, player_rect, text, text_rect) in players.items():
+    players[name] = [player_image, player_rect, text, text_rect ,True]
+    for name, (player_image, player_rect, text, text_rect , _) in players.items():
         player_rect.center = STARTING_POSITION
         text_rect.center = (player_rect.centerx, player_rect.top - 10)
 def receive_messages(client_socket):
@@ -86,15 +86,15 @@ except Exception as e:
     sys.exit(1)
 # Start a thread to listen for incoming messages
 data = client_socket.recv(1024)
-NAME= int(data.decode("uft-8"))
+NAME= data.decode("utf-8")
 Spawn(NAME)
 receiver_thread = threading.Thread(target=receive_messages, args=(client_socket,), daemon=True)
 receiver_thread.start()
 
 def goLeft():
-    client_socket.send(f"left,{NAME}")
+    client_socket.send(f"left,{str(NAME)}".encode("utf-8"))
 def goRight():
-    client_socket.send(f"right,{NAME}")
+    client_socket.send(f"right,{str(NAME)}".encode("utf-8"))
 
 running = True
 
@@ -120,7 +120,7 @@ while running:
         players[NAME][3].x += 5
 
     screen.blit(background, (0, 0))
-    for name, (player_image, player_rect, text, text_rect) in players.items():
+    for name, (player_image, player_rect, text, text_rect, _) in players.items():
         screen.blit(player_image, player_rect)
         screen.blit(text, text_rect)
 
