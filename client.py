@@ -3,9 +3,11 @@ import threading
 import sys
 import pygame
 import time
+
 HOST = '192.168.1.14'  # match the server's HOST
 PORT = 5001             # match the server's PORT
 NAME = None
+
 pygame.init()
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 400
@@ -16,6 +18,12 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Random Game")
 font = pygame.font.Font(None, 36)
 background = pygame.image.load('images/Background.jpeg').convert()
+
+# Define the border dimensions
+BORDER_LEFT = 0
+BORDER_RIGHT = SCREEN_WIDTH
+BORDER_TOP = 0
+BORDER_BOTTOM = SCREEN_HEIGHT
 
 players = {}
 
@@ -32,7 +40,6 @@ def receive_messages(client_socket):
     while True:
         try:
             data = client_socket.recv(1024)
-            print(data)
             if not data:
                 print("[!] Server closed connection.")
                 break
@@ -46,7 +53,6 @@ def receive_messages(client_socket):
                     continue
                 direction, name = instruction.split(",")
                 if direction == "left":
-
                     if players[name][4]:  # If the player is facing right
                         players[name][0] = pygame.transform.flip(players[name][0].copy(), True, False)
                     players[name][4] = False  # Facing left now
@@ -57,9 +63,10 @@ def receive_messages(client_socket):
                     players[name][4] = True  # Facing right now
                     players[name][1].x += 5
 
-                # Update the player's text position
+                # Clamp position to borders
+                players[name][1].x = max(BORDER_LEFT, min(players[name][1].x, BORDER_RIGHT - players[name][1].width))
                 players[name][3].center = (players[name][1].centerx, players[name][1].top - 10)
-                time.sleep(0.01)  # Slight delay to prevent rapid concatenation
+                time.sleep(0.01)
         except ConnectionResetError:
             print("[!] Connection forcibly closed by the server.")
             break
@@ -94,10 +101,12 @@ receiver_thread = threading.Thread(target=receive_messages, args=(client_socket,
 receiver_thread.start()
 
 def goLeft():
-    client_socket.send(f"left,{str(NAME)};".encode("utf-8"))
+    if players[NAME][1].left > BORDER_LEFT:  # Check if within the left boundary
+        client_socket.send(f"left,{str(NAME)};".encode("utf-8"))
 
 def goRight():
-    client_socket.send(f"right,{str(NAME)};".encode("utf-8"))
+    if players[NAME][1].right < BORDER_RIGHT:  # Check if within the right boundary
+        client_socket.send(f"right,{str(NAME)};".encode("utf-8"))
 
 running = True
 
@@ -120,10 +129,20 @@ while running:
             players[NAME][4] = True  # Facing right now
         players[NAME][1].x += 5
 
+    # Clamp player position to stay within the borders
+    players[NAME][1].x = max(BORDER_LEFT, min(players[NAME][1].x, BORDER_RIGHT - players[NAME][1].width))
+
     # Update the player's text position
     players[NAME][3].center = (players[NAME][1].centerx, players[NAME][1].top - 10)
 
+    # Draw the background and optional border
     screen.blit(background, (0, 0))
+
+    # Optional: Draw visible borders
+    border_color = (255, 0, 0)  # Red color for borders
+    pygame.draw.rect(screen, border_color, (BORDER_LEFT, BORDER_TOP, SCREEN_WIDTH, SCREEN_HEIGHT), 3)
+
+    # Draw players and their labels
     for name, (player_image, player_rect, text, text_rect, _) in players.items():
         screen.blit(player_image, player_rect)
         screen.blit(text, text_rect)
