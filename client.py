@@ -35,7 +35,9 @@ def Spawn(name):
 
     # Add player details to the players dictionary
     players[name] = [player_image, player_rect, text, text_rect, True]  # True = facing right
-
+    for name in players.keys():
+        players[name][1].center = STARTING_POSITION
+        players[name][3].center = (players[name][1].centerx, players[name][1].top - 10)
 def receive_messages(client_socket):
     while True:
         try:
