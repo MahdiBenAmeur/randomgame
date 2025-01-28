@@ -2,7 +2,7 @@ import socket
 import threading
 import sys
 import pygame
-
+import time
 HOST = '192.168.1.14'  # match the server's HOST
 PORT = 5001             # match the server's PORT
 NAME = None
@@ -32,6 +32,7 @@ def receive_messages(client_socket):
     while True:
         try:
             data = client_socket.recv(1024)
+            print(data)
             if not data:
                 print("[!] Server closed connection.")
                 break
@@ -45,6 +46,7 @@ def receive_messages(client_socket):
                     continue
                 direction, name = instruction.split(",")
                 if direction == "left":
+
                     if players[name][4]:  # If the player is facing right
                         players[name][0] = pygame.transform.flip(players[name][0].copy(), True, False)
                     players[name][4] = False  # Facing left now
@@ -57,7 +59,7 @@ def receive_messages(client_socket):
 
                 # Update the player's text position
                 players[name][3].center = (players[name][1].centerx, players[name][1].top - 10)
-
+                time.sleep(0.01)  # Slight delay to prevent rapid concatenation
         except ConnectionResetError:
             print("[!] Connection forcibly closed by the server.")
             break
