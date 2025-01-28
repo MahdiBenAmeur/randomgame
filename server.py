@@ -35,7 +35,6 @@ def handle_client(client_socket, address):
                 break
             # Broadcast the received message to other clients
             message_to_send = f"{address}: {data.decode('utf-8')}"
-            print(message_to_send)
             broadcast(data, sender_socket=client_socket)
 
         except ConnectionResetError:

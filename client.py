@@ -37,7 +37,6 @@ def receive_messages(client_socket):
     while True:
         try:
             data = client_socket.recv(1024)
-            print(data.decode('utf-8'))
             if not data:
                 # Server closed connection
                 print("[!] Server closed connection.")
@@ -129,6 +128,6 @@ while running:
         screen.blit(text, text_rect)
 
     pygame.display.update()
-    clock.tick(30)
+    clock.tick(60)
 
 pygame.quit()
