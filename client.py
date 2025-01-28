@@ -70,6 +70,8 @@ def receive_messages(client_socket):
 
 # Create a TCP client socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)  # Disable Nagle's algorithm
+
 try:
     client_socket.connect((HOST, PORT))
     print(f"[+] Connected to server at {HOST}:{PORT}")
