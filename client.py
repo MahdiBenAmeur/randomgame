@@ -21,29 +21,24 @@ players = {}
 
 def Spawn(name):
     player_image = pygame.image.load("images/player.png").convert_alpha()
-    player_rect = player_image.get_rect()
+    player_rect = player_image.get_rect(center=STARTING_POSITION)
     text = font.render(name, True, (255, 255, 255))
-    text_rect = text.get_rect()
+    text_rect = text.get_rect(center=(player_rect.centerx, player_rect.top - 10))
 
-    players[name] = [player_image, player_rect, text, text_rect, True]  # True means facing right initially
-    for name, (player_image, player_rect, text, text_rect, _) in players.items():
-        player_rect.center = STARTING_POSITION
-        text_rect.center = (player_rect.centerx, player_rect.top - 10)
+    # Add player details to the players dictionary
+    players[name] = [player_image, player_rect, text, text_rect, True]  # True = facing right
 
 def receive_messages(client_socket):
-    """
-    Continuously listen for messages from the server and print them.
-    """
     while True:
         try:
             data = client_socket.recv(1024)
             if not data:
-                # Server closed connection
                 print("[!] Server closed connection.")
                 break
             if len(data.decode('utf-8')) == 1:
                 Spawn(data.decode('utf-8'))
                 continue
+
             instructions = data.decode('utf-8').split(";")
             for instruction in instructions:
                 if instruction == "":
@@ -51,16 +46,17 @@ def receive_messages(client_socket):
                 direction, name = instruction.split(",")
                 if direction == "left":
                     if players[name][4]:  # If the player is facing right
-                        players[name][0] = pygame.transform.flip(players[name][0], True, False)
+                        players[name][0] = pygame.transform.flip(players[name][0].copy(), True, False)
                     players[name][4] = False  # Facing left now
                     players[name][1].x -= 5
-                    players[name][3].x -= 5
                 elif direction == "right":
                     if not players[name][4]:  # If the player is facing left
-                        players[name][0] = pygame.transform.flip(players[name][0], True, False)
+                        players[name][0] = pygame.transform.flip(players[name][0].copy(), True, False)
                     players[name][4] = True  # Facing right now
                     players[name][1].x += 5
-                    players[name][3].x += 5
+
+                # Update the player's text position
+                players[name][3].center = (players[name][1].centerx, players[name][1].top - 10)
 
         except ConnectionResetError:
             print("[!] Connection forcibly closed by the server.")
@@ -105,22 +101,23 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    
+
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         goLeft()
         if players[NAME][4]:  # If the player is facing right
-            players[NAME][0] = pygame.transform.flip(players[NAME][0], True, False)
+            players[NAME][0] = pygame.transform.flip(players[NAME][0].copy(), True, False)
             players[NAME][4] = False  # Facing left now
         players[NAME][1].x -= 5
-        players[NAME][3].x -= 5
     if keys[pygame.K_RIGHT]:
         goRight()
         if not players[NAME][4]:  # If the player is facing left
-            players[NAME][0] = pygame.transform.flip(players[NAME][0], True, False)
+            players[NAME][0] = pygame.transform.flip(players[NAME][0].copy(), True, False)
             players[NAME][4] = True  # Facing right now
         players[NAME][1].x += 5
-        players[NAME][3].x += 5
+
+    # Update the player's text position
+    players[NAME][3].center = (players[NAME][1].centerx, players[NAME][1].top - 10)
 
     screen.blit(background, (0, 0))
     for name, (player_image, player_rect, text, text_rect, _) in players.items():
@@ -130,4 +127,6 @@ while running:
     pygame.display.update()
     clock.tick(60)
 
+# Gracefully close the socket
+client_socket.close()
 pygame.quit()
