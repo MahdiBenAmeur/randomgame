@@ -55,11 +55,14 @@ async def ws_handler():
             ws_connection = websocket
             print("[+] Connected to WebSocket server")
             init_data = await websocket.recv()
+
             try:
                 count = int(init_data)
+
                 for i in range(count):
                     Spawn(str(i + 1))
-                NAME = "1"
+                print(init_data)
+                NAME = init_data
             except ValueError:
                 NAME = init_data
                 Spawn(NAME)
@@ -100,11 +103,11 @@ ws_thread = threading.Thread(target=start_ws_loop, daemon=True)
 ws_thread.start()
 
 time.sleep(1)
-if not players:
+"""if not players:
     NAME = "1"
     Spawn(NAME)
 else:
-    NAME = list(players.keys())[0]
+    NAME = list(players.keys())[0]"""
 
 def send_ws_message(message):
     if ws_connection is not None and ws_loop is not None:
@@ -128,6 +131,7 @@ def goRight():
 
 running = True
 while running:
+    print(NAME)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
